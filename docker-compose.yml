@@ -1,0 +1,59 @@
+version: "3"
+
+services:
+
+  postgres:
+    container_name: cqrs_database
+    image: postgres:14
+    restart: always
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_PASSWORD: root
+    networks:
+      - my_network
+  
+
+  elasticsearch:
+    container_name: cqrs_elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.5.3
+    expose:
+      - "9200"
+      - "9300"
+    ports: 
+      - 9200:9200
+      - 9300:9300
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms524m -Xmx524m"
+      - "http.publish_host=_local_"
+      - xpack.security.enabled=false
+      - cluster.routing.allocation.disk.threshold_enabled=false
+    networks:
+      - my_network
+  
+  kibana:
+    container_name: cqrs_kibana
+    image: docker.elastic.co/kibana/kibana:8.5.3
+    ports:
+      - 5601:5601
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    networks:
+      - my_network
+
+  redis:
+    image: 'bitnami/redis'
+    ports:
+      - '6379:6379'
+    environment:
+      - ALLOW_EMPTY_PASSWORD=true
+    networks:
+      - my_network
+
+
+networks:
+  my_network:
+    driver: bridge
+  
